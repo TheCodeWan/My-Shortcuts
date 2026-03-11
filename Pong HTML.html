@@ -160,7 +160,7 @@
         const paddleGap = 20;
 
         const PADDLE_CONTROL_WIDTH = 110;
-        const PADDLE_GAP = 120;   // your setting
+        const PADDLE_GAP = 120;
 
         let player1Y = HEIGHT / 2 - paddleHeight / 2;
         let player2Y = HEIGHT / 2 - paddleHeight / 2;
@@ -190,11 +190,14 @@
 
         let lastTime = 0;
 
+        // Keyboard state (new - lets you use W/S and arrows)
+        const keys = {};
+
         // =============== Audio ===============
         let audioCtx;
         let audioUnlocked = false;
 
-        // =============== Paddle buttons ===============
+        // =============== Paddle buttons (improved) ===============
         function setupButtons() {
             const p1up = document.getElementById('p1up');
             const p1down = document.getElementById('p1down');
@@ -208,13 +211,16 @@
                 audioUnlocked = true;
             };
 
-            ['touchstart', 'mousedown'].forEach(ev => {
+            // Press (works on touch + mouse)
+            ['pointerdown', 'touchstart', 'mousedown'].forEach(ev => {
                 p1up.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); unlock(); p1UpPressed = true; });
                 p1down.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); unlock(); p1DownPressed = true; });
                 p2up.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); unlock(); p2UpPressed = true; });
                 p2down.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); unlock(); p2DownPressed = true; });
             });
-            ['touchend', 'mouseup', 'mouseleave'].forEach(ev => {
+
+            // Release (includes pointercancel - fixes long-hold stuck state on iPhone)
+            ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'mouseup', 'mouseleave'].forEach(ev => {
                 p1up.addEventListener(ev, () => p1UpPressed = false);
                 p1down.addEventListener(ev, () => p1DownPressed = false);
                 p2up.addEventListener(ev, () => p2UpPressed = false);
@@ -222,7 +228,7 @@
             });
         }
 
-        // =============== Classic Pong sounds ===============
+        // =============== Classic Pong sounds (unchanged) ===============
         function playPaddleHit() {
             if (!audioCtx || audioCtx.state !== 'running') return;
             const osc = audioCtx.createOscillator();
@@ -262,7 +268,7 @@
             setTimeout(() => osc.stop(), 280);
         }
 
-        // =============== Move top & bottom buttons with the board ===============
+        // =============== Move top & bottom buttons with the board (unchanged) ===============
         function updateButtonPositions() {
             const removedWidth = PADDLE_CONTROL_WIDTH + PADDLE_GAP;
             const shift = (mode === 1) ? (removedWidth / 2) + 'px' : '0px';
@@ -270,23 +276,20 @@
             document.getElementById('bottom-controls').style.marginLeft = shift;
         }
 
-        // =============== Mode & pause (smooth slide both ways) ===============
+        // =============== Mode & pause (unchanged) ===============
         function setMode(newMode) {
             mode = newMode;
             const p2 = document.getElementById('p2-controls');
 
             if (mode === 2) {
-                // Expand: show first, then animate width
                 p2.style.display = 'flex';
-                // Force reflow so transition works
                 p2.offsetHeight; 
                 p2.style.width = PADDLE_CONTROL_WIDTH + 'px';
             } else {
-                // Shrink: animate width to 0, then hide
                 p2.style.width = '0px';
                 setTimeout(() => {
                     p2.style.display = 'none';
-                }, 200);  // matches transition duration
+                }, 200);
             }
 
             updateModeButtons();
@@ -305,7 +308,6 @@
             if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        // =============== Rest of the code (unchanged) ===============
         function checkOrientation() {
             const warning = document.getElementById('portrait-warning');
             warning.style.display = (window.innerWidth < window.innerHeight && !isIphone) ? 'block' : 'none';
@@ -368,22 +370,35 @@
         function collidesWithPaddle(paddleX, paddleY) {
             return (ballX - ballRadius < paddleX + paddleWidth && ballX + ballRadius > paddleX && ballY > paddleY && ballY < paddleY + paddleHeight);
         }
+
+        // =============== UPDATE - fixed movement here ===============
         function update(delta) {
             if (paused || gameOver) return;
-            if (p1UpPressed && player1Y > paddleGap) player1Y -= paddleSpeed * delta;
-            if (p1DownPressed && player1Y < HEIGHT - paddleHeight - paddleGap) player1Y += paddleSpeed * delta;
+
+            // Net velocity (clean math - fixes the glitch)
+            // Left paddle - buttons OR keyboard (W/S)
+            let p1Velocity = 0;
+            if (p1UpPressed || keys['w'] || keys['W']) p1Velocity -= paddleSpeed;
+            if (p1DownPressed || keys['s'] || keys['S']) p1Velocity += paddleSpeed;
+            player1Y += p1Velocity * delta;
+
+            // Right paddle
             if (mode === 2) {
-                if (p2UpPressed && player2Y > paddleGap) player2Y -= paddleSpeed * delta;
-                if (p2DownPressed && player2Y < HEIGHT - paddleHeight - paddleGap) player2Y += paddleSpeed * delta;
+                let p2Velocity = 0;
+                if (p2UpPressed || keys['ArrowUp']) p2Velocity -= paddleSpeed;
+                if (p2DownPressed || keys['ArrowDown']) p2Velocity += paddleSpeed;
+                player2Y += p2Velocity * delta;
             } else {
                 const targetY = ballY - paddleHeight / 2;
                 const aiReaction = aiBaseReaction + Math.min(rallyFrames / 15000, aiBaseReaction * 0.55);
                 player2Y += (targetY - player2Y) * aiReaction * delta;
             }
 
+            // Clamp (keeps paddles on screen)
             player1Y = Math.max(paddleGap, Math.min(HEIGHT - paddleHeight - paddleGap, player1Y));
             player2Y = Math.max(paddleGap, Math.min(HEIGHT - paddleHeight - paddleGap, player2Y));
 
+            // Ball (exactly the same as your original)
             ballX += ballDX * delta;
             ballY += ballDY * delta;
             rallyFrames += delta;
@@ -429,6 +444,7 @@
                 else resetBall(); 
             }
         }
+
         function draw() {
             ctx.fillStyle = '#000'; ctx.fillRect(0, 0, WIDTH, HEIGHT);
             ctx.strokeStyle = '#fff'; ctx.setLineDash([10, 15]); ctx.beginPath(); ctx.moveTo(WIDTH / 2, 0); ctx.lineTo(WIDTH / 2, HEIGHT); ctx.stroke(); ctx.setLineDash([]);
@@ -458,10 +474,23 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // =============== Keyboard support (new) ===============
+        function setupKeyboard() {
+            window.addEventListener('keydown', e => {
+                keys[e.key] = true;
+                if (['ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault(); // stops page scroll
+                if (e.key.toLowerCase() === 'p') togglePause();
+            });
+            window.addEventListener('keyup', e => {
+                keys[e.key] = false;
+            });
+        }
+
         // =============== START ===============
         window.onload = () => {
             isIphone = /iPhone/.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent);
             setupButtons();
+            setupKeyboard();           // <-- new
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             setMode(2);
             resetGame();
