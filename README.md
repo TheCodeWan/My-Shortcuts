@@ -1,2 +1,2 @@
 # My-Shortcuts
-Files related to my own shortcuts
+Files related to my public shortcuts
