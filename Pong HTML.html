@@ -1,503 +1,607 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>Pong Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background: #111;
-            color: #fff;
-            margin: 0;
-            padding: 8px;
-            touch-action: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-        h1 { margin: 6px 0 8px 0; font-size: 22px; }
-        #game-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: transform 0.3s ease;
-            transform-origin: center center;
-        }
-        #game-wrapper.rotated {
-            transform: rotate(-90deg);
-        }
-        #top-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 8px;
-            flex-shrink: 0;
-            transition: margin-left 0.2s ease;
-        }
-        #top-controls button {
-            padding: 8px 18px;
-            font-size: 15px;
-            background: #333;
-            color: #fff;
-            border: 2px solid #fff;
-            border-radius: 6px;
-            min-width: 110px;
-        }
-        #top-controls button.active {
-            background: #0066ff;
-            border-color: #44aaff;
-            color: white;
-        }
-        #game-area {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-        }
-        canvas {
-            border: 4px solid #fff;
-            background: #000;
-            image-rendering: crisp-edges;
-        }
-        .paddle-controls {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 6px;
-            margin-top: -22px;
-        }
-        .paddle-controls strong {
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-        .paddle-controls button {
-            width: 98px;
-            height: 105px;
-            font-size: 42px;
-            background: #444;
-            border: 3px solid #fff;
-        }
-        #p2-controls {
-            transition: width 0.2s ease;
-            overflow: hidden;
-        }
-        #bottom-controls {
-            margin-top: 8px;
-            flex-shrink: 0;
-            transition: margin-left 0.2s ease;
-        }
-        #bottom-controls button {
-            padding: 9px 24px;
-            font-size: 16px;
-            background: #333;
-            color: #fff;
-            border: 2px solid #fff;
-            border-radius: 6px;
-        }
-        #portrait-warning {
-            background: #c00;
-            color: white;
-            padding: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            margin: 8px auto;
-            max-width: 520px;
-            border-radius: 10px;
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Snake</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      user-select: none;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      background: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #e2e8f0;
+      overflow: hidden;
+      position: fixed;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    header {
+      padding: 12px 16px 8px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #22c55e;
+      letter-spacing: 1px;
+    }
+
+    .scores {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .scores span {
+      background: #1e293b;
+      padding: 6px 16px;
+      border-radius: 20px;
+    }
+
+    #score { color: #4ade80; }
+    #high { color: #fbbf24; }
+
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 8px;
+    }
+
+    #canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    canvas {
+      background: #020617;
+      border-radius: 12px;
+      box-shadow: 0 0 0 3px #1e293b, 0 8px 24px rgba(0,0,0,0.4);
+      max-width: 100%;
+      max-height: 100%;
+      touch-action: none;
+    }
+
+    #controls {
+      padding: 12px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 14px 0;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
+      -webkit-appearance: none;
+    }
+
+    button:active {
+      transform: scale(0.95);
+      opacity: 0.85;
+    }
+
+    #startBtn {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #052e16;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);
+    }
+
+    #startBtn.hidden { display: none; }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 6px;
+      width: 180px;
+      height: 180px;
+    }
+
+    .dpad button {
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      box-shadow: 0 2px 0 #0f172a;
+    }
+
+    .dpad button:active {
+      background: #334155;
+      color: #e2e8f0;
+    }
+
+    .dpad .up    { grid-column: 2; grid-row: 1; }
+    .dpad .left  { grid-column: 1; grid-row: 2; }
+    .dpad .right { grid-column: 3; grid-row: 2; }
+    .dpad .down  { grid-column: 2; grid-row: 3; }
+    .dpad .empty { visibility: hidden; }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #overlay.hidden { display: none; }
+
+    #overlay h2 {
+      font-size: 1.9rem;
+      margin-bottom: 8px;
+      color: #f87171;
+    }
+
+    #overlay p {
+      font-size: 1.15rem;
+      margin-bottom: 20px;
+      color: #cbd5e1;
+    }
+
+    #overlay button {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #052e16;
+      padding: 14px 40px;
+      font-size: 1.15rem;
+    }
+
+    .swipe-hint {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* ===== Wide screens (iPad landscape + Mac) ===== */
+    @media (min-width: 700px) {
+      #app {
+        max-width: 1000px;
+      }
+
+      #main {
+        flex-direction: row;
+        align-items: center;
+        gap: 24px;
+        padding: 16px 24px;
+      }
+
+      #canvas-wrap {
+        flex: 1;
+      }
+
+      #controls {
+        width: 220px;
+        padding: 0;
+      }
+
+      .dpad {
+        width: 200px;
+        height: 200px;
+      }
+
+      .swipe-hint {
+        display: none; /* keyboard is better on Mac */
+      }
+    }
+
+    @media (min-width: 900px) {
+      h1 {
+        font-size: 1.7rem;
+      }
+      .scores {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div id="portrait-warning">
-        ↻ Rotate your iPhone sideways for best view
+  <div id="app">
+    <header>
+      <h1>SNAKE</h1>
+      <div class="scores">
+        <span>Score: <span id="score">0</span></span>
+        <span>Best: <span id="high">0</span></span>
+      </div>
+    </header>
+
+    <div id="main">
+      <div id="canvas-wrap">
+        <canvas id="game" width="320" height="320"></canvas>
+      </div>
+
+      <div id="controls">
+        <button id="startBtn">Start Game</button>
+        <div class="dpad" id="dpad">
+          <div class="empty"></div>
+          <button class="up" data-dir="up">▲</button>
+          <div class="empty"></div>
+          <button class="left" data-dir="left">◀</button>
+          <div class="empty"></div>
+          <button class="right" data-dir="right">▶</button>
+          <div class="empty"></div>
+          <button class="down" data-dir="down">▼</button>
+          <div class="empty"></div>
+        </div>
+        <p class="swipe-hint">or swipe on the board</p>
+      </div>
     </div>
+  </div>
 
-    <div id="game-wrapper">
-        <div id="top-controls">
-            <button id="btn1p" onclick="setMode(1)">One Player</button>
-            <button id="btn2p" onclick="setMode(2)">Two Players</button>
-        </div>
+  <div id="overlay" class="hidden">
+    <h2>Game Over</h2>
+    <p>Score: <span id="finalScore">0</span></p>
+    <button id="restartBtn">Play Again</button>
+  </div>
 
-        <div id="game-area">
-            <div class="paddle-controls">
-                <strong>Left Paddle</strong>
-                <button id="p1up">↑</button>
-                <button id="p1down">↓</button>
-            </div>
+  <script>
+    const GRID = 16;
+    const SPEED_START = 330;   // a little slower
+    const SPEED_MIN = 100;
+    const SPEED_STEP = 6;
 
-            <canvas id="pong" width="800" height="400"></canvas>
+    let canvas, ctx;
+    let cellSize = 20;
+    let snake, direction, nextDirection, food, score, highScore;
+    let gameLoop = null;
+    let running = false;
+    let speed = SPEED_START;
+    let foodsEaten = 0;
 
-            <div class="paddle-controls" id="p2-controls">
-                <strong>Right Paddle</strong>
-                <button id="p2up">↑</button>
-                <button id="p2down">↓</button>
-            </div>
-        </div>
+    let touchStartX = 0;
+    let touchStartY = 0;
 
-        <div id="bottom-controls">
-            <button id="pause-btn" onclick="togglePause()">Resume</button>
-        </div>
-    </div>
+    function init() {
+      canvas = document.getElementById('game');
+      ctx = canvas.getContext('2d');
 
-    <script>
-        // =============== Canvas & variables ===============
-        const canvas = document.getElementById('pong');
-        const ctx = canvas.getContext('2d');
-        let WIDTH = 800;
-        let HEIGHT = 400;
-        canvas.width = WIDTH;
-        canvas.height = HEIGHT;
+      highScore = parseInt(localStorage.getItem('snakeHigh') || '0', 10);
+      document.getElementById('high').textContent = highScore;
 
-        let paddleWidth = 14;
-        let paddleHeight = 130;
-        let paddleSpeed = 8.5;
-        let baseBallSpeed = 4.0;
-        let ballRadius = 13;
-        const paddleGap = 20;
+      document.getElementById('startBtn').addEventListener('click', startGame);
+      document.getElementById('restartBtn').addEventListener('click', startGame);
 
-        const PADDLE_CONTROL_WIDTH = 110;
-        const PADDLE_GAP = 120;
+      document.querySelectorAll('.dpad button').forEach(btn => {
+        btn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          setDirection(btn.dataset.dir);
+        }, { passive: false });
+        btn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          setDirection(btn.dataset.dir);
+        });
+      });
 
-        let player1Y = HEIGHT / 2 - paddleHeight / 2;
-        let player2Y = HEIGHT / 2 - paddleHeight / 2;
-        let player1Score = 0;
-        let player2Score = 0;
+      canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+      canvas.addEventListener('touchend', onTouchEnd, { passive: false });
 
-        let ballX = WIDTH / 2;
-        let ballY = HEIGHT / 2;
-        let ballDX = baseBallSpeed;
-        let ballDY = 0;
+      window.addEventListener('keydown', onKey);
+      document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
-        let rallyFrames = 0;
+      // Resize handling
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
 
-        let mode = 2;
-        let paused = true;
-        let gameOver = false;
+      resizeCanvas();
+      drawEmpty();
+    }
 
-        let p1UpPressed = false;
-        let p1DownPressed = false;
-        let p2UpPressed = false;
-        let p2DownPressed = false;
+    function resizeCanvas() {
+      const wrap = document.getElementById('canvas-wrap');
+      const maxSize = Math.min(wrap.clientWidth, wrap.clientHeight, 520);
 
-        let isIphone = false;
-        let isRotated = false;
+      // Keep it a multiple of GRID for crisp pixels
+      const size = Math.floor(maxSize / GRID) * GRID;
+      if (size < 240) return; // safety
 
-        let aiBaseReaction = 0.039;
+      canvas.width = size;
+      canvas.height = size;
+      cellSize = size / GRID;
 
-        let lastTime = 0;
+      if (running) {
+        draw();
+      } else {
+        drawEmpty();
+      }
+    }
 
-        // Keyboard state (new - lets you use W/S and arrows)
-        const keys = {};
+    function drawEmpty() {
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= GRID; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * cellSize, 0);
+        ctx.lineTo(i * cellSize, canvas.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * cellSize);
+        ctx.lineTo(canvas.width, i * cellSize);
+        ctx.stroke();
+      }
+    }
 
-        // =============== Audio ===============
-        let audioCtx;
-        let audioUnlocked = false;
+    function startGame() {
+      snake = [
+        { x: 8, y: 8 },
+        { x: 7, y: 8 },
+        { x: 6, y: 8 }
+      ];
+      direction = 'right';
+      nextDirection = 'right';
+      score = 0;
+      foodsEaten = 0;
+      speed = SPEED_START;
+      placeFood();
 
-        // =============== Paddle buttons (improved) ===============
-        function setupButtons() {
-            const p1up = document.getElementById('p1up');
-            const p1down = document.getElementById('p1down');
-            const p2up = document.getElementById('p2up');
-            const p2down = document.getElementById('p2down');
+      document.getElementById('score').textContent = '0';
+      document.getElementById('startBtn').classList.add('hidden');
+      document.getElementById('overlay').classList.add('hidden');
 
-            const unlock = () => {
-                if (audioCtx && audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                audioUnlocked = true;
-            };
+      running = true;
+      if (gameLoop) clearInterval(gameLoop);
+      gameLoop = setInterval(tick, speed);
+      draw();
+    }
 
-            // Press (works on touch + mouse)
-            ['pointerdown', 'touchstart', 'mousedown'].forEach(ev => {
-                p1up.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); unlock(); p1UpPressed = true; });
-                p1down.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); unlock(); p1DownPressed = true; });
-                p2up.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); unlock(); p2UpPressed = true; });
-                p2down.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); unlock(); p2DownPressed = true; });
-            });
+    function endGame() {
+      running = false;
+      clearInterval(gameLoop);
+      gameLoop = null;
 
-            // Release (includes pointercancel - fixes long-hold stuck state on iPhone)
-            ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'mouseup', 'mouseleave'].forEach(ev => {
-                p1up.addEventListener(ev, () => p1UpPressed = false);
-                p1down.addEventListener(ev, () => p1DownPressed = false);
-                p2up.addEventListener(ev, () => p2UpPressed = false);
-                p2down.addEventListener(ev, () => p2DownPressed = false);
-            });
-        }
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('snakeHigh', highScore);
+        document.getElementById('high').textContent = highScore;
+      }
 
-        // =============== Classic Pong sounds (unchanged) ===============
-        function playPaddleHit() {
-            if (!audioCtx || audioCtx.state !== 'running') return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(330, audioCtx.currentTime);
-            gain.gain.value = 0.25;
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            setTimeout(() => osc.stop(), 40);
-        }
+      document.getElementById('finalScore').textContent = score;
+      document.getElementById('overlay').classList.remove('hidden');
+      document.getElementById('startBtn').classList.remove('hidden');
+    }
 
-        function playWallBounce() {
-            if (!audioCtx || audioCtx.state !== 'running') return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-            gain.gain.value = 0.15;
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            setTimeout(() => osc.stop(), 30);
-        }
+    function setDirection(dir) {
+      if (!running) return;
+      if (
+        (dir === 'up'    && direction !== 'down')  ||
+        (dir === 'down'  && direction !== 'up')    ||
+        (dir === 'left'  && direction !== 'right') ||
+        (dir === 'right' && direction !== 'left')
+      ) {
+        nextDirection = dir;
+      }
+    }
 
-        function playScoreSound() {
-            if (!audioCtx || audioCtx.state !== 'running') return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-            gain.gain.value = 0.3;
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            setTimeout(() => osc.stop(), 280);
-        }
+    function onKey(e) {
+      const map = {
+        ArrowUp: 'up', ArrowDown: 'down',
+        ArrowLeft: 'left', ArrowRight: 'right',
+        w: 'up', s: 'down', a: 'left', d: 'right',
+        W: 'up', S: 'down', A: 'left', D: 'right'
+      };
+      if (map[e.key]) {
+        e.preventDefault();
+        setDirection(map[e.key]);
+      }
+    }
 
-        // =============== Move top & bottom buttons with the board (unchanged) ===============
-        function updateButtonPositions() {
-            const removedWidth = PADDLE_CONTROL_WIDTH + PADDLE_GAP;
-            const shift = (mode === 1) ? (removedWidth / 2) + 'px' : '0px';
-            document.getElementById('top-controls').style.marginLeft = shift;
-            document.getElementById('bottom-controls').style.marginLeft = shift;
-        }
+    function onTouchStart(e) {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    }
 
-        // =============== Mode & pause (unchanged) ===============
-        function setMode(newMode) {
-            mode = newMode;
-            const p2 = document.getElementById('p2-controls');
+    function onTouchEnd(e) {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
 
-            if (mode === 2) {
-                p2.style.display = 'flex';
-                p2.offsetHeight; 
-                p2.style.width = PADDLE_CONTROL_WIDTH + 'px';
-            } else {
-                p2.style.width = '0px';
-                setTimeout(() => {
-                    p2.style.display = 'none';
-                }, 200);
-            }
+      if (Math.max(absX, absY) < 25) return;
 
-            updateModeButtons();
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            resetGame();
-            updateButtonPositions();
-        }
-        function updateModeButtons() {
-            document.getElementById('btn1p').classList.toggle('active', mode === 1);
-            document.getElementById('btn2p').classList.toggle('active', mode === 2);
-        }
-        function togglePause() {
-            paused = !paused;
-            const btn = document.getElementById('pause-btn');
-            btn.textContent = paused ? 'Resume' : 'Pause';
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        }
+      if (absX > absY) {
+        setDirection(dx > 0 ? 'right' : 'left');
+      } else {
+        setDirection(dy > 0 ? 'down' : 'up');
+      }
+    }
 
-        function checkOrientation() {
-            const warning = document.getElementById('portrait-warning');
-            warning.style.display = (window.innerWidth < window.innerHeight && !isIphone) ? 'block' : 'none';
-        }
-        function updateRotation() {
-            if (!isIphone) {
-                isRotated = false;
-                document.getElementById('game-wrapper').classList.remove('rotated');
-                return;
-            }
-            const shouldRotate = window.innerWidth < window.innerHeight;
-            if (shouldRotate !== isRotated) {
-                isRotated = shouldRotate;
-                document.getElementById('game-wrapper').classList.toggle('rotated', isRotated);
-            }
-        }
-        function resizeCanvas() {
-            const availW = window.innerWidth * 0.96;
-            const availH = window.innerHeight * 0.96 - 60;
-            let scale = 0.65;
-            const wrapper = document.getElementById('game-wrapper');
-            if (isRotated) {
-                scale = Math.min(availW / 620, availH / 860, 0.55);
-                wrapper.style.marginTop = '185px';
-                wrapper.style.marginLeft = '0px';
-            } else {
-                let maxW = Math.min(availW, 920);
-                if (window.innerWidth < window.innerHeight) maxW = Math.min(availH * 0.92, 920);
-                scale = maxW / 800;
-                wrapper.style.marginTop = '0';
-                wrapper.style.marginLeft = '0';
-            }
-            canvas.style.width = (800 * scale) + 'px';
-            canvas.style.height = (400 * scale) + 'px';
-        }
-        function handleResize() {
-            checkOrientation();
-            updateRotation();
-            resizeCanvas();
-            updateButtonPositions();
-        }
-
-        function resetBall() {
-            ballX = WIDTH / 2; ballY = HEIGHT / 2;
-            ballDX = (Math.random() > 0.5 ? 1 : -1) * baseBallSpeed;
-            ballDY = (Math.random() * 6 - 3); rallyFrames = 0;
-        }
-        function resetGame() {
-            player1Y = HEIGHT / 2 - paddleHeight / 2;
-            player2Y = HEIGHT / 2 - paddleHeight / 2;
-            player1Score = 0; player2Score = 0;
-            player1Y = Math.max(paddleGap, Math.min(HEIGHT - paddleHeight - paddleGap, player1Y));
-            player2Y = Math.max(paddleGap, Math.min(HEIGHT - paddleHeight - paddleGap, player2Y));
-            resetBall();
-            paused = true;
-            gameOver = false;
-            document.getElementById('pause-btn').textContent = 'Resume';
-            lastTime = 0;
-        }
-        function collidesWithPaddle(paddleX, paddleY) {
-            return (ballX - ballRadius < paddleX + paddleWidth && ballX + ballRadius > paddleX && ballY > paddleY && ballY < paddleY + paddleHeight);
-        }
-
-        // =============== UPDATE - fixed movement here ===============
-        function update(delta) {
-            if (paused || gameOver) return;
-
-            // Net velocity (clean math - fixes the glitch)
-            // Left paddle - buttons OR keyboard (W/S)
-            let p1Velocity = 0;
-            if (p1UpPressed || keys['w'] || keys['W']) p1Velocity -= paddleSpeed;
-            if (p1DownPressed || keys['s'] || keys['S']) p1Velocity += paddleSpeed;
-            player1Y += p1Velocity * delta;
-
-            // Right paddle
-            if (mode === 2) {
-                let p2Velocity = 0;
-                if (p2UpPressed || keys['ArrowUp']) p2Velocity -= paddleSpeed;
-                if (p2DownPressed || keys['ArrowDown']) p2Velocity += paddleSpeed;
-                player2Y += p2Velocity * delta;
-            } else {
-                const targetY = ballY - paddleHeight / 2;
-                const aiReaction = aiBaseReaction + Math.min(rallyFrames / 15000, aiBaseReaction * 0.55);
-                player2Y += (targetY - player2Y) * aiReaction * delta;
-            }
-
-            // Clamp (keeps paddles on screen)
-            player1Y = Math.max(paddleGap, Math.min(HEIGHT - paddleHeight - paddleGap, player1Y));
-            player2Y = Math.max(paddleGap, Math.min(HEIGHT - paddleHeight - paddleGap, player2Y));
-
-            // Ball (exactly the same as your original)
-            ballX += ballDX * delta;
-            ballY += ballDY * delta;
-            rallyFrames += delta;
-
-            const speedFactor = 1 + rallyFrames / 2400;
-            const currentMag = Math.hypot(ballDX, ballDY);
-            if (currentMag > 0) {
-                const targetMag = baseBallSpeed * speedFactor;
-                ballDX = (ballDX / currentMag) * targetMag;
-                ballDY = (ballDY / currentMag) * targetMag;
-            }
-            if (ballY - ballRadius < 0) {
-                ballY = ballRadius;
-                ballDY = Math.abs(ballDY);
-                playWallBounce();
-            } else if (ballY + ballRadius > HEIGHT) {
-                ballY = HEIGHT - ballRadius;
-                ballDY = -Math.abs(ballDY);
-                playWallBounce();
-            }
-            if (collidesWithPaddle(10, player1Y) && ballDX < 0) {
-                ballDX = -ballDX;
-                const hitPos = (ballY - (player1Y + paddleHeight / 2)) / (paddleHeight / 2);
-                ballDY = hitPos * 7;
-                playPaddleHit();
-            }
-            if (collidesWithPaddle(WIDTH - paddleWidth - 10, player2Y) && ballDX > 0) {
-                ballDX = -ballDX;
-                const hitPos = (ballY - (player2Y + paddleHeight / 2)) / (paddleHeight / 2);
-                ballDY = hitPos * 7;
-                playPaddleHit();
-            }
-            if (ballX - ballRadius < 0) { 
-                player2Score++; 
-                playScoreSound();
-                if (player2Score >= 11) gameOver = true; 
-                else resetBall(); 
-            }
-            if (ballX + ballRadius > WIDTH) { 
-                player1Score++; 
-                playScoreSound();
-                if (player1Score >= 11) gameOver = true; 
-                else resetBall(); 
-            }
-        }
-
-        function draw() {
-            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, WIDTH, HEIGHT);
-            ctx.strokeStyle = '#fff'; ctx.setLineDash([10, 15]); ctx.beginPath(); ctx.moveTo(WIDTH / 2, 0); ctx.lineTo(WIDTH / 2, HEIGHT); ctx.stroke(); ctx.setLineDash([]);
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(10, player1Y, paddleWidth, paddleHeight);
-            ctx.fillRect(WIDTH - paddleWidth - 10, player2Y, paddleWidth, paddleHeight);
-            ctx.beginPath(); ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2); ctx.fill();
-            ctx.font = 'bold 52px Arial'; ctx.textAlign = 'center';
-            ctx.fillText(player1Score, WIDTH / 4, 75);
-            ctx.fillText(player2Score, 3 * WIDTH / 4, 75);
-            if (gameOver) {
-                ctx.fillStyle = '#ff0'; ctx.font = 'bold 42px Arial';
-                const winner = player1Score >= 11 ? 'Player 1' : (mode === 2 ? 'Player 2' : 'Computer');
-                ctx.fillText(winner + ' WINS!', WIDTH / 2, HEIGHT / 2);
-            }
-            if (paused && !gameOver) {
-                ctx.fillStyle = '#ff0'; ctx.font = 'bold 36px Arial';
-                ctx.fillText('PAUSED', WIDTH / 2, HEIGHT / 2);
-            }
-        }
-        function gameLoop(timestamp = 0) {
-            if (!lastTime) lastTime = timestamp;
-            const delta = Math.min((timestamp - lastTime) / 16.6667, 3);
-            lastTime = timestamp;
-            update(delta);
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // =============== Keyboard support (new) ===============
-        function setupKeyboard() {
-            window.addEventListener('keydown', e => {
-                keys[e.key] = true;
-                if (['ArrowUp', 'ArrowDown'].includes(e.key)) e.preventDefault(); // stops page scroll
-                if (e.key.toLowerCase() === 'p') togglePause();
-            });
-            window.addEventListener('keyup', e => {
-                keys[e.key] = false;
-            });
-        }
-
-        // =============== START ===============
-        window.onload = () => {
-            isIphone = /iPhone/.test(navigator.userAgent) && !/iPad/.test(navigator.userAgent);
-            setupButtons();
-            setupKeyboard();           // <-- new
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            setMode(2);
-            resetGame();
-            window.addEventListener('resize', handleResize);
-            handleResize();
-            gameLoop();
+    function placeFood() {
+      let pos;
+      do {
+        // Keep food away from the very edge
+        pos = {
+          x: Math.floor(Math.random() * (GRID - 2)) + 1,
+          y: Math.floor(Math.random() * (GRID - 2)) + 1
         };
-    </script>
+      } while (snake.some(s => s.x === pos.x && s.y === pos.y));
+      food = pos;
+    }
+
+    function tick() {
+      direction = nextDirection;
+
+      const head = { ...snake[0] };
+      if (direction === 'up')    head.y--;
+      if (direction === 'down')  head.y++;
+      if (direction === 'left')  head.x--;
+      if (direction === 'right') head.x++;
+
+      if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID) {
+        endGame();
+        return;
+      }
+
+      if (snake.some(s => s.x === head.x && s.y === head.y)) {
+        endGame();
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        foodsEaten++;
+        document.getElementById('score').textContent = score;
+        placeFood();
+
+        if (foodsEaten % 3 === 0 && speed > SPEED_MIN) {
+          speed = Math.max(SPEED_MIN, speed - SPEED_STEP);
+          clearInterval(gameLoop);
+          gameLoop = setInterval(tick, speed);
+        }
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function draw() {
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= GRID; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * cellSize + 0.5, 0);
+        ctx.lineTo(i * cellSize + 0.5, canvas.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * cellSize + 0.5);
+        ctx.lineTo(canvas.width, i * cellSize + 0.5);
+        ctx.stroke();
+      }
+
+      // Food
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.roundRect(
+        food.x * cellSize + 3,
+        food.y * cellSize + 3,
+        cellSize - 6,
+        cellSize - 6,
+        4
+      );
+      ctx.fill();
+
+      // Snake
+      snake.forEach((seg, i) => {
+        const isHead = i === 0;
+        ctx.fillStyle = isHead ? '#4ade80' : '#22c55e';
+        ctx.beginPath();
+        ctx.roundRect(
+          seg.x * cellSize + 2,
+          seg.y * cellSize + 2,
+          cellSize - 4,
+          cellSize - 4,
+          isHead ? 6 : 4
+        );
+        ctx.fill();
+
+        if (isHead) {
+          ctx.fillStyle = '#052e16';
+          const eyeSize = Math.max(2.5, cellSize * 0.12);
+          let ex1, ey1, ex2, ey2;
+          const offset = cellSize * 0.28;
+
+          if (direction === 'right') {
+            ex1 = seg.x * cellSize + cellSize - offset;
+            ey1 = seg.y * cellSize + offset;
+            ex2 = seg.x * cellSize + cellSize - offset;
+            ey2 = seg.y * cellSize + cellSize - offset;
+          } else if (direction === 'left') {
+            ex1 = seg.x * cellSize + offset;
+            ey1 = seg.y * cellSize + offset;
+            ex2 = seg.x * cellSize + offset;
+            ey2 = seg.y * cellSize + cellSize - offset;
+          } else if (direction === 'up') {
+            ex1 = seg.x * cellSize + offset;
+            ey1 = seg.y * cellSize + offset;
+            ex2 = seg.x * cellSize + cellSize - offset;
+            ey2 = seg.y * cellSize + offset;
+          } else {
+            ex1 = seg.x * cellSize + offset;
+            ey1 = seg.y * cellSize + cellSize - offset;
+            ex2 = seg.x * cellSize + cellSize - offset;
+            ey2 = seg.y * cellSize + cellSize - offset;
+          }
+          ctx.beginPath();
+          ctx.arc(ex1, ey1, eyeSize, 0, Math.PI * 2);
+          ctx.arc(ex2, ey2, eyeSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
+
+    // roundRect polyfill
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.beginPath();
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+        return this;
+      };
+    }
+
+    init();
+  </script>
 </body>
 </html>
