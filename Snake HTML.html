@@ -93,10 +93,10 @@
     }
 
     #controls {
-      padding: 8px 12px 16px;
+      padding: 8px 12px 18px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       flex-shrink: 0;
       align-items: center;
     }
@@ -196,6 +196,7 @@
       text-align: center;
       font-size: 0.8rem;
       color: #64748b;
+      margin-top: 4px;
     }
 
     /* iPad + Mac */
@@ -239,7 +240,7 @@
 
     <div id="main">
       <div id="canvas-wrap">
-        <canvas id="game" width="300" height="300"></canvas>
+        <canvas id="game" width="310" height="310"></canvas>
       </div>
 
       <div id="controls">
@@ -321,9 +322,9 @@
       const wrap = document.getElementById('canvas-wrap');
       let maxSize = Math.min(wrap.clientWidth - 4, wrap.clientHeight - 4);
 
-      // Keep it smaller on phones
+      // Slightly bigger than the previous 300 version
       if (window.innerWidth < 500) {
-        maxSize = Math.min(maxSize, 300);
+        maxSize = Math.min(maxSize, 318);
       } else {
         maxSize = Math.min(maxSize, 540);
       }
