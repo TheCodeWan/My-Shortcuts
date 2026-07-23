@@ -31,7 +31,7 @@
       flex-direction: column;
       height: 100%;
       width: 100%;
-      max-width: 480px;
+      max-width: 900px;
       margin: 0 auto;
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
@@ -39,10 +39,11 @@
     header {
       padding: 12px 16px 8px;
       text-align: center;
+      flex-shrink: 0;
     }
 
     h1 {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: #22c55e;
       letter-spacing: 1px;
@@ -50,27 +51,35 @@
 
     .scores {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
+      gap: 24px;
       margin-top: 8px;
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 600;
     }
 
     .scores span {
       background: #1e293b;
-      padding: 6px 14px;
+      padding: 6px 16px;
       border-radius: 20px;
     }
 
     #score { color: #4ade80; }
     #high { color: #fbbf24; }
 
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 8px;
+    }
+
     #canvas-wrap {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 8px;
       min-height: 0;
     }
 
@@ -88,6 +97,8 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      flex-shrink: 0;
+      align-items: center;
     }
 
     button {
@@ -110,6 +121,7 @@
       background: linear-gradient(135deg, #22c55e, #16a34a);
       color: #052e16;
       width: 100%;
+      max-width: 320px;
       box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);
     }
 
@@ -122,7 +134,6 @@
       gap: 6px;
       width: 180px;
       height: 180px;
-      margin: 0 auto;
     }
 
     .dpad button {
@@ -163,13 +174,13 @@
     #overlay.hidden { display: none; }
 
     #overlay h2 {
-      font-size: 1.8rem;
+      font-size: 1.9rem;
       margin-bottom: 8px;
       color: #f87171;
     }
 
     #overlay p {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       margin-bottom: 20px;
       color: #cbd5e1;
     }
@@ -177,15 +188,56 @@
     #overlay button {
       background: linear-gradient(135deg, #22c55e, #16a34a);
       color: #052e16;
-      padding: 14px 36px;
+      padding: 14px 40px;
       font-size: 1.15rem;
     }
 
     .swipe-hint {
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       color: #64748b;
       margin-top: 4px;
+    }
+
+    /* ===== Wide screens (iPad landscape + Mac) ===== */
+    @media (min-width: 700px) {
+      #app {
+        max-width: 1000px;
+      }
+
+      #main {
+        flex-direction: row;
+        align-items: center;
+        gap: 24px;
+        padding: 16px 24px;
+      }
+
+      #canvas-wrap {
+        flex: 1;
+      }
+
+      #controls {
+        width: 220px;
+        padding: 0;
+      }
+
+      .dpad {
+        width: 200px;
+        height: 200px;
+      }
+
+      .swipe-hint {
+        display: none; /* keyboard is better on Mac */
+      }
+    }
+
+    @media (min-width: 900px) {
+      h1 {
+        font-size: 1.7rem;
+      }
+      .scores {
+        font-size: 1.1rem;
+      }
     }
   </style>
 </head>
@@ -199,24 +251,26 @@
       </div>
     </header>
 
-    <div id="canvas-wrap">
-      <canvas id="game" width="320" height="320"></canvas>
-    </div>
-
-    <div id="controls">
-      <button id="startBtn">Start Game</button>
-      <div class="dpad" id="dpad">
-        <div class="empty"></div>
-        <button class="up" data-dir="up">▲</button>
-        <div class="empty"></div>
-        <button class="left" data-dir="left">◀</button>
-        <div class="empty"></div>
-        <button class="right" data-dir="right">▶</button>
-        <div class="empty"></div>
-        <button class="down" data-dir="down">▼</button>
-        <div class="empty"></div>
+    <div id="main">
+      <div id="canvas-wrap">
+        <canvas id="game" width="320" height="320"></canvas>
       </div>
-      <p class="swipe-hint">or swipe anywhere on the board</p>
+
+      <div id="controls">
+        <button id="startBtn">Start Game</button>
+        <div class="dpad" id="dpad">
+          <div class="empty"></div>
+          <button class="up" data-dir="up">▲</button>
+          <div class="empty"></div>
+          <button class="left" data-dir="left">◀</button>
+          <div class="empty"></div>
+          <button class="right" data-dir="right">▶</button>
+          <div class="empty"></div>
+          <button class="down" data-dir="down">▼</button>
+          <div class="empty"></div>
+        </div>
+        <p class="swipe-hint">or swipe on the board</p>
+      </div>
     </div>
   </div>
 
@@ -228,12 +282,12 @@
 
   <script>
     const GRID = 16;
-    const CELL = 20;
-    const SPEED_START = 280;   // much slower start (was 140)
-    const SPEED_MIN = 90;      // also a bit higher minimum
+    const SPEED_START = 330;   // a little slower
+    const SPEED_MIN = 100;
     const SPEED_STEP = 6;
 
     let canvas, ctx;
+    let cellSize = 20;
     let snake, direction, nextDirection, food, score, highScore;
     let gameLoop = null;
     let running = false;
@@ -270,7 +324,31 @@
       window.addEventListener('keydown', onKey);
       document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
+      // Resize handling
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
+
+      resizeCanvas();
       drawEmpty();
+    }
+
+    function resizeCanvas() {
+      const wrap = document.getElementById('canvas-wrap');
+      const maxSize = Math.min(wrap.clientWidth, wrap.clientHeight, 520);
+
+      // Keep it a multiple of GRID for crisp pixels
+      const size = Math.floor(maxSize / GRID) * GRID;
+      if (size < 240) return; // safety
+
+      canvas.width = size;
+      canvas.height = size;
+      cellSize = size / GRID;
+
+      if (running) {
+        draw();
+      } else {
+        drawEmpty();
+      }
     }
 
     function drawEmpty() {
@@ -280,12 +358,12 @@
       ctx.lineWidth = 1;
       for (let i = 0; i <= GRID; i++) {
         ctx.beginPath();
-        ctx.moveTo(i * CELL, 0);
-        ctx.lineTo(i * CELL, canvas.height);
+        ctx.moveTo(i * cellSize, 0);
+        ctx.lineTo(i * cellSize, canvas.height);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(0, i * CELL);
-        ctx.lineTo(canvas.width, i * CELL);
+        ctx.moveTo(0, i * cellSize);
+        ctx.lineTo(canvas.width, i * cellSize);
         ctx.stroke();
       }
     }
@@ -345,7 +423,8 @@
       const map = {
         ArrowUp: 'up', ArrowDown: 'down',
         ArrowLeft: 'left', ArrowRight: 'right',
-        w: 'up', s: 'down', a: 'left', d: 'right'
+        w: 'up', s: 'down', a: 'left', d: 'right',
+        W: 'up', S: 'down', A: 'left', D: 'right'
       };
       if (map[e.key]) {
         e.preventDefault();
@@ -380,7 +459,7 @@
     function placeFood() {
       let pos;
       do {
-        // Keep food away from the very edge (1 to GRID-2)
+        // Keep food away from the very edge
         pos = {
           x: Math.floor(Math.random() * (GRID - 2)) + 1,
           y: Math.floor(Math.random() * (GRID - 2)) + 1
@@ -436,19 +515,25 @@
       ctx.lineWidth = 1;
       for (let i = 0; i <= GRID; i++) {
         ctx.beginPath();
-        ctx.moveTo(i * CELL + 0.5, 0);
-        ctx.lineTo(i * CELL + 0.5, canvas.height);
+        ctx.moveTo(i * cellSize + 0.5, 0);
+        ctx.lineTo(i * cellSize + 0.5, canvas.height);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(0, i * CELL + 0.5);
-        ctx.lineTo(canvas.width, i * CELL + 0.5);
+        ctx.moveTo(0, i * cellSize + 0.5);
+        ctx.lineTo(canvas.width, i * cellSize + 0.5);
         ctx.stroke();
       }
 
       // Food
       ctx.fillStyle = '#ef4444';
       ctx.beginPath();
-      ctx.roundRect(food.x * CELL + 3, food.y * CELL + 3, CELL - 6, CELL - 6, 4);
+      ctx.roundRect(
+        food.x * cellSize + 3,
+        food.y * cellSize + 3,
+        cellSize - 6,
+        cellSize - 6,
+        4
+      );
       ctx.fill();
 
       // Snake
@@ -456,25 +541,41 @@
         const isHead = i === 0;
         ctx.fillStyle = isHead ? '#4ade80' : '#22c55e';
         ctx.beginPath();
-        ctx.roundRect(seg.x * CELL + 2, seg.y * CELL + 2, CELL - 4, CELL - 4, isHead ? 6 : 4);
+        ctx.roundRect(
+          seg.x * cellSize + 2,
+          seg.y * cellSize + 2,
+          cellSize - 4,
+          cellSize - 4,
+          isHead ? 6 : 4
+        );
         ctx.fill();
 
         if (isHead) {
           ctx.fillStyle = '#052e16';
-          const eyeSize = 3;
+          const eyeSize = Math.max(2.5, cellSize * 0.12);
           let ex1, ey1, ex2, ey2;
+          const offset = cellSize * 0.28;
+
           if (direction === 'right') {
-            ex1 = seg.x * CELL + 13; ey1 = seg.y * CELL + 6;
-            ex2 = seg.x * CELL + 13; ey2 = seg.y * CELL + 13;
+            ex1 = seg.x * cellSize + cellSize - offset;
+            ey1 = seg.y * cellSize + offset;
+            ex2 = seg.x * cellSize + cellSize - offset;
+            ey2 = seg.y * cellSize + cellSize - offset;
           } else if (direction === 'left') {
-            ex1 = seg.x * CELL + 5; ey1 = seg.y * CELL + 6;
-            ex2 = seg.x * CELL + 5; ey2 = seg.y * CELL + 13;
+            ex1 = seg.x * cellSize + offset;
+            ey1 = seg.y * cellSize + offset;
+            ex2 = seg.x * cellSize + offset;
+            ey2 = seg.y * cellSize + cellSize - offset;
           } else if (direction === 'up') {
-            ex1 = seg.x * CELL + 6; ey1 = seg.y * CELL + 5;
-            ex2 = seg.x * CELL + 13; ey2 = seg.y * CELL + 5;
+            ex1 = seg.x * cellSize + offset;
+            ey1 = seg.y * cellSize + offset;
+            ex2 = seg.x * cellSize + cellSize - offset;
+            ey2 = seg.y * cellSize + offset;
           } else {
-            ex1 = seg.x * CELL + 6; ey1 = seg.y * CELL + 13;
-            ex2 = seg.x * CELL + 13; ey2 = seg.y * CELL + 13;
+            ex1 = seg.x * cellSize + offset;
+            ey1 = seg.y * cellSize + cellSize - offset;
+            ex2 = seg.x * cellSize + cellSize - offset;
+            ey2 = seg.y * cellSize + cellSize - offset;
           }
           ctx.beginPath();
           ctx.arc(ex1, ey1, eyeSize, 0, Math.PI * 2);
@@ -484,7 +585,7 @@
       });
     }
 
-    // roundRect polyfill for older Safari
+    // roundRect polyfill
     if (!CanvasRenderingContext2D.prototype.roundRect) {
       CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
         if (w < 2 * r) r = w / 2;
