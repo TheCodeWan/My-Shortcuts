@@ -43,7 +43,7 @@
     }
 
     h1 {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: 700;
       color: #22c55e;
       letter-spacing: 1px;
@@ -52,15 +52,15 @@
     .scores {
       display: flex;
       justify-content: center;
-      gap: 16px;
-      margin-top: 4px;
-      font-size: 0.9rem;
+      gap: 18px;
+      margin-top: 5px;
+      font-size: 0.92rem;
       font-weight: 600;
     }
 
     .scores span {
       background: #1e293b;
-      padding: 4px 12px;
+      padding: 4px 13px;
       border-radius: 16px;
     }
 
@@ -72,7 +72,7 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
-      padding: 2px 6px;
+      padding: 4px 8px;
     }
 
     #canvas-wrap {
@@ -85,7 +85,7 @@
 
     canvas {
       background: #020617;
-      border-radius: 10px;
+      border-radius: 11px;
       box-shadow: 0 0 0 3px #1e293b, 0 6px 20px rgba(0,0,0,0.4);
       max-width: 100%;
       max-height: 100%;
@@ -93,7 +93,7 @@
     }
 
     #controls {
-      padding: 6px 10px 12px;
+      padding: 6px 10px 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -106,7 +106,7 @@
       border-radius: 14px;
       font-size: 1.05rem;
       font-weight: 700;
-      padding: 11px 0;
+      padding: 12px 0;
       cursor: pointer;
       transition: transform 0.1s, opacity 0.15s;
       -webkit-appearance: none;
@@ -131,15 +131,15 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 4px;
-      width: 140px;          /* smaller on phone so board can be bigger */
-      height: 140px;
+      gap: 5px;
+      width: 148px;
+      height: 148px;
     }
 
     .dpad button {
       background: #1e293b;
       color: #94a3b8;
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -174,13 +174,13 @@
     #overlay.hidden { display: none; }
 
     #overlay h2 {
-      font-size: 1.7rem;
+      font-size: 1.75rem;
       margin-bottom: 6px;
       color: #f87171;
     }
 
     #overlay p {
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       margin-bottom: 18px;
       color: #cbd5e1;
     }
@@ -188,13 +188,13 @@
     #overlay button {
       background: linear-gradient(135deg, #22c55e, #16a34a);
       color: #052e16;
-      padding: 13px 32px;
+      padding: 13px 34px;
       font-size: 1.1rem;
     }
 
     .swipe-hint {
       text-align: center;
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: #64748b;
     }
 
@@ -209,18 +209,18 @@
       #main {
         flex-direction: row;
         align-items: center;
-        gap: 30px;
+        gap: 28px;
         padding: 10px 24px;
       }
 
       #controls {
-        width: 220px;
+        width: 210px;
         padding: 0;
       }
 
       .dpad {
-        width: 190px;
-        height: 190px;
+        width: 185px;
+        height: 185px;
       }
 
       .swipe-hint { display: none; }
@@ -239,7 +239,7 @@
 
     <div id="main">
       <div id="canvas-wrap">
-        <canvas id="game" width="340" height="340"></canvas>
+        <canvas id="game" width="320" height="320"></canvas>
       </div>
 
       <div id="controls">
@@ -319,15 +319,15 @@
 
     function resizeCanvas() {
       const wrap = document.getElementById('canvas-wrap');
-      // Aggressively use available space on phone
-      let maxSize = Math.min(wrap.clientWidth - 2, wrap.clientHeight - 2);
+      let maxSize = Math.min(wrap.clientWidth - 4, wrap.clientHeight - 4);
 
-      // Prefer a nice size on phones
+      // Balanced size for phones
       if (window.innerWidth < 500) {
-        maxSize = Math.max(maxSize, 300);
+        maxSize = Math.min(maxSize, 335);   // not too big
+        maxSize = Math.max(maxSize, 300);   // not too small
+      } else {
+        maxSize = Math.min(maxSize, 560);
       }
-
-      maxSize = Math.min(maxSize, 580);
 
       const size = Math.floor(maxSize / GRID) * GRID;
       if (size < 280) return;
